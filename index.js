@@ -1,58 +1,72 @@
-const { default: axios } = require('axios');
-const cors = require('cors');
-
-const express = require('express');
+const axios = require("axios");
+const cors = require("cors");
+const express = require("express");
 
 const app = express();
-const PORT = 3200;
+const PORT = process.env.PORT || 3200;
 
-app.use(cors());
+// CORS: Allow all origins (safe for demo, tighten in prod)
+app.use(
+  cors({
+    origin: "*",
+  })
+);
 
+// Start server
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  const baseURL = process.env.PORT
+    ? `https://dcycle-backend.onrender.com`
+    : `http://localhost:${PORT}`;
+  console.log(`Server running at ${baseURL}`);
 });
 
-// Add this to the bottom of app.js
-app.get('/api/genderize/:name', async (req, res) => {
-  const { name } = req.params;
-  const response = await axios.get(`https://api.genderize.io/?name=${name}`);
-  res.json(response.data);
-});
-
-app.get('/api/nationalize/:name', async (req, res) => {
-  const { name } = req.params;
-  const response = await axios.get(`https://api.nationalize.io/?name=${name}`);
-  res.json(response.data);
-});
-
-app.get('/api/agify/:name', async (req, res) => {
-  const { name } = req.params;
-  const response = await axios.get(`https://api.agify.io/?name=${name}`);
-  res.json(response.data);
-});
-
-// app.get('/api/covid', async (req, res) => {
-//   const response = await axios.get(
-//     'https://corona.lmao.ninja/v2/continents?yesterday=true&sort'
-//   );
-//   res.json(response.data);
-// });
-
-// app.get('/api/covid/:countries', async (req, res) => {
-//   const { countries } = req.params;
-//   const response = await axios.get(
-//     `https://corona.lmao.ninja/v2/countries/${countries}?yesterday=true&strict=true&query
-//     `
-//   );
-//   res.json(response.data);
-// });
-
-app.get('/api/covid/historical', async (req, res) => {
+// Gender endpoint
+app.get("/api/genderize/:name", async (req, res) => {
   try {
-    const response = await axios.get(`https://api.covidtracking.com/v2/us/daily.json`);
-    return res.json(response.data);
-  } catch (error) {
-    console.log(error);
-    return res.status(400).json({ error: 'Error fetching data' });
+    const { name } = req.params;
+    const response = await axios.get(`https://api.genderize.io/?name=${name}`);
+    res.json(response.data);
+  } catch (err) {
+    console.error("Genderize API error:", err.message);
+    res.status(500).json({ error: "Failed to fetch gender data" });
+  }
+});
+
+// Nationality endpoint
+app.get("/api/nationalize/:name", async (req, res) => {
+  try {
+    const { name } = req.params;
+    const response = await axios.get(
+      `https://api.nationalize.io/?name=${name}`
+    );
+    res.json(response.data);
+  } catch (err) {
+    console.error("Nationalize API error:", err.message);
+    res.status(500).json({ error: "Failed to fetch nationality data" });
+  }
+});
+
+// Age endpoint
+app.get("/api/agify/:name", async (req, res) => {
+  try {
+    const { name } = req.params;
+    const response = await axios.get(`https://api.agify.io/?name=${name}`);
+    res.json(response.data);
+  } catch (err) {
+    console.error("Agify API error:", err.message);
+    res.status(500).json({ error: "Failed to fetch age data" });
+  }
+});
+
+// COVID historical data endpoint
+app.get("/api/covid/historical", async (req, res) => {
+  try {
+    const response = await axios.get(
+      `https://api.covidtracking.com/v2/us/daily.json`
+    );
+    res.json(response.data);
+  } catch (err) {
+    console.error("COVID API error:", err.message);
+    res.status(500).json({ error: "Failed to fetch COVID data" });
   }
 });
